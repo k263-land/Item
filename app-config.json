@@ -1,0 +1,5 @@
+{
+  "appUrl": "https://script.google.com/macros/s/여기에_실제_배포주소_붙여넣기/exec",
+  "updated": "2026-09-04",
+  "note": "Apps Script 배포주소가 바뀌면 위 appUrl 한 줄만 수정하고 커밋하세요. 현장에 재안내할 필요가 없습니다."
+}

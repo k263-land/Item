@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>집중모델 가이드</title>
+
+<!-- 홈화면 아이콘 (안드로이드) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+
+<!-- 홈화면 아이콘 (아이폰 · 사파리는 manifest 대신 이 태그를 사용) -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="집중모델 가이드">
+
+<meta name="theme-color" content="#101A2E">
+<meta name="robots" content="noindex, nofollow">
+
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#101A2E;overflow:hidden}
+  #frame{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#101A2E}
+  #boot{
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; padding:24px;
+    background:#101A2E; color:#9FB0CC; text-align:center; line-height:1.6;
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    font-size:13.5px; z-index:5; transition:opacity .35s;
+  }
+  #boot img{width:78px;height:78px;border-radius:18px}
+  #boot.hide{opacity:0;pointer-events:none}
+  #boot .err{color:#FF8FA3;font-size:13px}
+  #boot code{display:block;margin-top:6px;color:#6E7F9C;font-size:11.5px;word-break:break-all}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <img src="icons/icon-192.png" alt="">
+  <span id="bootMsg">불러오는 중…</span>
+</div>
+
+<iframe id="frame" allow="clipboard-write" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   접속 주소를 app-config.json 에서 읽어옵니다.
+
+   이 구조를 쓰는 이유:
+   현장에는 이 페이지 주소만 안내하면 되고, 나중에 Apps Script
+   배포 주소가 바뀌더라도 app-config.json 한 줄만 고치면 전원에게
+   자동 반영됩니다. 현장에 주소를 다시 안내할 필요가 없습니다.
+
+   캐시 우회를 위해 매번 다른 쿼리를 붙여 요청합니다.
+   ══════════════════════════════════════════════════════════════ */
+
+// app-config.json 을 못 읽었을 때 사용할 예비 주소 (선택 입력)
+var FALLBACK_URL = '';
+
+var frame   = document.getElementById('frame');
+var boot    = document.getElementById('boot');
+var bootMsg = document.getElementById('bootMsg');
+
+function showError(detail){
+  boot.classList.remove('hide');
+  bootMsg.innerHTML =
+    '<span class="err">접속 주소를 불러오지 못했습니다.<br>' +
+    '잠시 후 다시 시도하거나 상품기획G로 문의해 주세요.</span>' +
+    '<code>' + (detail || '') + '</code>';
+}
+
+function openApp(url){
+  if(!url){ showError('app-config.json 의 appUrl 이 비어 있습니다.'); return; }
+  frame.addEventListener('load', function(){
+    setTimeout(function(){ boot.classList.add('hide'); }, 250);
+  });
+  // 로드 이벤트가 안 잡히는 경우를 대비한 안전장치
+  setTimeout(function(){ boot.classList.add('hide'); }, 8000);
+  frame.src = url;
+}
+
+fetch('app-config.json?t=' + Date.now(), { cache: 'no-store' })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(cfg){ openApp(cfg.appUrl); })
+  .catch(function(err){
+    if(FALLBACK_URL) openApp(FALLBACK_URL);
+    else showError(String(err));
+  });
+</script>
+
+</body>
+</html>
